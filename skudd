@@ -1,0 +1,56 @@
+#!/bin/bash
+# Requires xclip
+set -e
+
+[ ! -r "$HOME/.skudd" ] && echo "Missing $HOME/.skudd" && exit 2
+
+source ~/.skudd
+
+if [ -z "${SCREENSHOTS_DIR}" -a -z "${URL}" -a -z "${REMOTE_HOST}" -a -z "${REMOTE_PATH}" -a -z "${REMOTE_SCP}" ];then
+ echo "Missing configuration, read my script and set env. variables in ~/.skudd"
+ exit 1
+fi
+
+SELECTED_SCREEN=
+WINDOW=
+AREA=
+
+set -- $(getopt swa "$@")
+while [ $# -gt 0 ]
+do
+    case "$1" in
+    (-s) SELECTED_SCREEN=1;;
+    (-w) WINDOW=1;;
+    (-a) AREA=1;;
+    (--) shift; break;;
+    (-*) echo "$0: error - unrecognized option $1" 1>&2; exit 1;;
+    (*)  break;;
+    esac
+    shift
+done
+
+DATE=$(date +%Y%m%d_%H%M%S)
+NAME="screenshoot-$DATE.png"
+
+
+
+
+[ ! -d "${SCREENSHOTS_DIR}" ] && mkdir -p "${SCREENSHOTS_DIR}"
+
+
+if [ -n "$WINDOW" ]; then
+  scrot -sb "${SCREENSHOTS_DIR}/$NAME"
+elif [ -n "$SELECTED_SCREEN" ]; then
+  scrot "${SCREENSHOTS_DIR}/$NAME"
+elif [ -n "$AREA" ]; then
+  scrot -m  "${SCREENSHOTS_DIR}/$NAME"
+else
+  echo "Unrecognized option..derp"
+fi
+
+if [ $? -eq 0 ]; then
+  #echo "Scp to $SELECTED_SCREEN_dir/$NAME -> $REMOTE_SCP"
+  scp "${SCREENSHOTS_DIR}/$NAME" "${REMOTE_SCP}"
+  ssh ${REMOTE_HOST} "chmod o=r ${REMOTE_PATH}/$NAME"
+  echo -n "${URL}/$NAME" | xclip 
+fi
