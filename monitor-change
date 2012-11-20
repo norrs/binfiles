@@ -1,0 +1,30 @@
+#!/bin/sh
+
+DUALHEAD=
+CLONE=
+
+set -- $(getopt dc "$@")
+while [ $# -gt 0 ]
+do
+    case "$1" in
+    (-d) DUALHEAD=1;;
+    (-c) CLONE=1;;
+    (--) shift; break;;
+    (-*) echo "$0: error - unrecognized option $1" 1>&2; exit 1;;
+    (*)  break;;
+    esac
+    shift
+done
+
+HOST=$(hostname)
+
+if [ "$HOST" = "pandora" ]; then
+	if [ -n "$DUALHEAD" ]; then
+		xrandr --output DVI-I-3 --right-of DVI-I-2
+	elif [ -n "$CLONE" ]; then
+		xrandr --output DVI-I-3 --same-as DVI-I-2
+	fi
+	exit 0
+fi
+echo "Settings for $HOST not found"
+exit 1
