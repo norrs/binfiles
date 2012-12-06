@@ -25,6 +25,13 @@ if [ "$HOST" = "pandora" ]; then
 		xrandr --output DVI-I-3 --same-as DVI-I-2
 	fi
 	exit 0
+elif [ "$HOST" = "stud-1201" ]; then
+	if [ -n "$DUALHEAD" ]; then
+		xrandr --output DisplayPort-0 --left-of DisplayPort-1
+	elif [ -n "$CLONE" ]; then
+		xrandr --output DisplayPort-1 --same-as DisplayPort-0
+	fi
+	exit 0
 fi
 echo "Settings for $HOST not found"
 exit 1
