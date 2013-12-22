@@ -1,0 +1,25 @@
+#!/bin/bash
+hash pwgen 2>&- || { echo >&2 "I require pwgen but it's not installed.  Aborting."; exit 1; }
+hash x11vnc 2>&- || { echo >&2 "I require x11vnc but it's not installed.  Aborting."; exit 1; }
+
+if [[ $EUID -ne 0 ]];then
+  echo "* Sadly this script has to be run as root to hijack display :0"
+  echo "* exiting"
+  exit 1
+fi
+
+echo "** SECURITY INFO **"
+echo "* * VNC server gets killed by dkill.pl after 1 hour"
+echo "* * "
+GENPASSWD=$(pwgen -s 10 | cut -f1)
+echo -n "* * session password: "
+echo $GENPASSWD
+echo $GENPASSWD>~reidun/.vnc/genpasswd
+echo "* * passwd will be wiped after session"
+echo "************************************************ "
+echo " "
+(sleep 2 && echo -n "* * session password: " && echo $GENPASSWD) &
+
+COOKIE=`find /var/run/gdm3/ -iname "auth-for-Debian-gdm*" | head -n1`
+x11vnc -auth $COOKIE/database -display :0 -passwdfile rm:/home/reidun/.vnc/genpasswd -localhost
+echo "VNC server killed either by YOU or by dkill.pl hopefully"
